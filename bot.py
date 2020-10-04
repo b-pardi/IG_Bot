@@ -21,7 +21,7 @@ class InstagramBot:
 
     """
     Called by creating instance of bot
-    -navigates to instagram.com
+    -navigate to instagram.com
     -enters login information
     -submits login
     -closes 2 following popup prompts
