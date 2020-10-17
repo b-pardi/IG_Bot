@@ -2,8 +2,9 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import NoSuchElementException
-from selenium.common.exceptions import StaleElementReferenceException
+from selenium.common.exceptions import *
+from pydub import AudioSegment
+from pydub.playback import play
 import os
 import time
 import random
@@ -16,3 +17,4 @@ from bs4 import BeautifulSoup
 import pandas as pd
 from pip._vendor import requests
 import re
+import numpy as np
