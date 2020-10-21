@@ -1,7 +1,5 @@
 from botImports import *
-from _helpers import *
 from topSecretNoNoZone import *
-import _helpers
 
 
 class InstagramBot:
@@ -16,7 +14,7 @@ class InstagramBot:
         
         #pass exe to an instance of chrome from selenium's webdriver
         self.driver = webdriver.Chrome()
-
+        print("Loaded Chromedriver")
         self.login()
 
     """
@@ -29,6 +27,7 @@ class InstagramBot:
     def login(self):
         #opens instagram.com then inputs and submits passed in username and password
         self.driver.get('https://www.instagram.com/accounts/login/')
+        print("Navigated to: 'instagram.com'")
         time.sleep(random.normalvariate(1.1, 0.2))
         username_entry = self.driver.find_element_by_name('username')
         password_entry = self.driver.find_element_by_name('password')
@@ -36,14 +35,17 @@ class InstagramBot:
         password_entry.send_keys(self.password)
         time.sleep(random.normalvariate(1.1, 0.2))
         password_entry.submit()
+        print("Logged in succesfully to account: " + username)
         #self.driver.find_element_by_xpath("//div[contains(text(), 'Log In')]")[0].click()
         
         time.sleep(3)
         login_save_button = self.driver.find_elements_by_xpath("//button[contains(text(), 'Not Now')]")[0]
         login_save_button.click() 
+        print("Closed popup 1")
         time.sleep(random.normalvariate(1.5, 0.2))
         notifications_button = self.driver.find_elements_by_xpath("//button[contains(text(), 'Not Now')]")[0]
         notifications_button.click() 
+        print("Closed popup 2")
         time.sleep(random.normalvariate(1.5, 0.2))
         
     
@@ -135,15 +137,27 @@ class InstagramBot:
             followers_str = (followers[:-1].encode('UTF-8'))
             followers = int(self.extract_numbers(followers_str))
             followers = followers * 1000
+
+        elif followers[-1] == 'm':
+            followers_str = (followers[:-1].encode('UTF-8'))
+            followers = int(self.extract_numbers(followers_str))
+            followers = followers * 1000000
+
         else:
             followers_str = (followers.encode('UTF-8'))
             followers = int(self.extract_numbers(followers_str))
-        
+            
         following = text[2]
         if following[-1] == 'k':
             following_str = (following[:-1].encode('UTF-8'))
             following = int(self.extract_numbers(following_str))
             following = following * 1000
+
+        elif following[-1] == 'm':
+            following_str = (following[:-1].encode('UTF-8'))
+            following = int(self.extract_numbers(following_str))
+            following = following * 1000000
+
         else:
             following_str = (following.encode('UTF-8'))
             following = int(self.extract_numbers(following_str))
@@ -247,21 +261,30 @@ class InstagramBot:
         time.sleep(random.normalvariate(3.4, 0.2))
         self.make_driver_wait("//a[contains(@href, '/following')]")
         self.driver.find_element_by_xpath("//a[contains(@href, '/following')]").click()
+        print("Navigated to user's following")
         time.sleep(random.normalvariate(3.4, 0.2))
+        print("acquiring following accounts...")
         following = self.get_names(fing)
+        print("Names retrieved")
         with open('following.txt', 'w') as f:
                 for name in following:
                     f.write("%s\n" % name)
+        print("Added to text file 'following.txt'")
 
         time.sleep(random.normalvariate(3.4, 0.2))
         self.make_driver_wait("//a[contains(@href, '/followers')]")
         self.driver.find_element_by_xpath("//a[contains(@href, '/followers')]").click()
+        print("Navigated to user's followers")
         time.sleep(random.normalvariate(3.4, 0.2))
+        print("acquiring followers accounts...")
         followers = self.get_names(fers)
+        print("Names retrieved")
         with open('followers.txt', 'w') as f:
                 for name in followers:
                     f.write("%s\n" % name)
-        
+        print("Added to text file 'followers.txt'")
+
+        print("Cross referencing lists...")        
         not_following_back = [user for user in following if user not in followers]
         with open('notfollowingback.txt', 'w') as f:
                 for name in not_following_back:
@@ -275,8 +298,7 @@ class InstagramBot:
                 count += 1
                 print(count, x)
                 prev = x
-
-        self.driver.quit()
+        print("Process complete!\n Check file 'notfollowingback.txt'")
 
        
 
@@ -292,16 +314,15 @@ class InstagramBot:
         Error checking for if line is empty
     """
     def mass_unfollow(self):
+        print("Gathering users from 'notfollowingback.txt'...")
         f = open("notfollowingback.txt", 'r+')
         profiles = []
         for line in f:
             profiles.append(line.strip())
 
         f.close()
-
-        jump = AudioSegment.from_mp3('Mario_Jump.mp3')
-        play(jump)
-
+        print("Users found")
+        count = 0
         x = 0
         for i in profiles:
             time.sleep(random.normalvariate(12.5, 1.125))
@@ -316,8 +337,13 @@ class InstagramBot:
             except NoSuchElementException:
                 print("Already unfollowed User")
                 pass
+
+            except IndexError:
+                print("User no longer exists")
+                pass
             
-            print("Unfollowed user: " + profiles[x])
+            count +=1
+            print(str(count) + ". Unfollowed user: " + profiles[x])
             x += 1            
         
         party = AudioSegment.from_mp3('Party_Horn_Sound_Effect.mp3')
@@ -341,6 +367,7 @@ class InstagramBot:
     def follow_multiple(self, user):
         #navigate to user profile
         self.nav_user(user)
+        print("Navigated to profile: " + username)
         time.sleep(3)
         ignored_exceptions = (NoSuchElementException, StaleElementReferenceException, ElementClickInterceptedException)
 
@@ -349,37 +376,54 @@ class InstagramBot:
         followers_button.click()
         time.sleep(2)
         followers_popup = self.driver.find_element_by_xpath("/html/body/div[4]/div/div/div[2]")
-
-        follower_popup_range = int(self.follower_amt(user))
-        for i in range(int(follower_popup_range/12)):
+        print("Follower box opened")
+        #follower_amt = self.follower_amt(user)
+        #follower_popup_range = int(follower_amt[0])
+        #for i in range(int(follower_popup_range/12)):
+        for i in range(1000):
             time.sleep(random.normalvariate(2, 0.3))
             f = 0
-            while f<=11:
+            while f<=12:
                 f+=1    
 
                 try:
                     #try to click follow button
-                    time.sleep(random.normalvariate(1.2, 0.2))   
+                    time.sleep(random.normalvariate(9.6, 1.3))   
                     lc = f + (i*12)
-                    print('pressing' + str(lc) + '...')
-                    button1 = self.driver.find_elements_by_xpath("/html/body/div[4]/div/div/div[2]/ul/div/li[{}]/div/div[3]/button".format(lc))
-                    button2 = self.driver.find_elements_by_xpath("/html/body/div[4]/div/div/div[2]/ul/div/li[{}]/div/div[2]/button".format(lc))
-                    if (len(button1) > 0):#                        /html/body/div[4]/div/div/div[2]/ul/div/li[1]/div/div[2]/button
-                        print(button1)
+                    print('pressing ' + str(lc) + '...')
+                    button1 = self.driver.find_elements_by_xpath("/html/body/div[6]/div/div/div[2]/ul/div/li[{}]/div/div[3]/button".format(lc))
+                    button2 = self.driver.find_elements_by_xpath("/html/body/div[6]/div/div/div[2]/ul/div/li[{}]/div/div[2]/button".format(lc))
+                    button3 = self.driver.find_elements_by_xpath("/html/body/div[4]/div/div/div[2]/ul/div/li[{}]/div/div[3]/button".format(lc))
+                    button4 = self.driver.find_elements_by_xpath("/html/body/div[4]/div/div/div[2]/ul/div/li[{}]/div/div[2]/button".format(lc))
+
+                    if (len(button1) > 0):#                        /html/body/div[4]/div/div/div[2]/ul/div/li[1]/div/div[3]/button
                         button1[0].click()
                         print('button1 ' + str(lc) + ' pressed')
                     elif (len(button2) > 0):
                         button2[0].click()
                         print('button2 ' + str(lc) + ' pressed')
+                    elif (len(button3) > 0):
+                        button3[0].click()
+                        print('button3 ' + str(lc) + ' pressed')
+                    elif (len(button4) > 0):
+                        button4[0].click()
+                        print('button4 ' + str(lc) + ' pressed')
 
                 except ElementClickInterceptedException:
-                     #attempt to click cancel on one xpath
+                    #attempt to click cancel on one xpath
                     self.driver.find_element_by_xpath("/html/body/div[5]/div/div/div/div[3]/button[2]").click()
                     print(str(lc) + ': Already following user')
                     f -= 1
 
                 except StaleElementReferenceException:
                     continue
+
+                except ElementClickInterceptedException:
+                    print("Potential follow Limit Reached! Try again later :)")
+
+                except NoSuchElementException:
+                    print("error occured, please see console")
+                    
                 
 
             #JS to scroll through list
@@ -463,8 +507,9 @@ if __name__ == '__main__':
     #print(ig_bot.follower_amt('true_halo_memes'))
 
 
-    ig_bot.get_unfollowers('brandonator24')
+    
+    #ig_bot.get_unfollowers('brandonator24')
     #ig_bot.mass_unfollow()
 
-    #ig_bot.follow_multiple('rememberhalo')
+    ig_bot.follow_multiple('halo')
     #ig_bot.follow_top_liked('minecraftmemes') 
