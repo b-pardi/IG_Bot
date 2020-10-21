@@ -35,7 +35,7 @@ class InstagramBot:
         password_entry.send_keys(self.password)
         time.sleep(random.normalvariate(1.1, 0.2))
         password_entry.submit()
-        print("Logged in succesfully to account: " + username)
+        print("Logged in succesfully to account: " + self.username)
         #self.driver.find_element_by_xpath("//div[contains(text(), 'Log In')]")[0].click()
         
         time.sleep(3)
@@ -367,7 +367,7 @@ class InstagramBot:
     def follow_multiple(self, user):
         #navigate to user profile
         self.nav_user(user)
-        print("Navigated to profile: " + username)
+        print("Navigated to profile: " + user)
         time.sleep(3)
         ignored_exceptions = (NoSuchElementException, StaleElementReferenceException, ElementClickInterceptedException)
 
