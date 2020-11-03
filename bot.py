@@ -332,17 +332,24 @@ class InstagramBot:
             time.sleep(random.normalvariate(9.5, 1.125))
             self.nav_user(name)
             time.sleep(random.normalvariate(2.5, 0.025))
+
             try:
                 buttons = self.driver.find_elements_by_xpath("//button[*]")[0].click()
                 time.sleep(random.normalvariate(0.8, 0.05))
                 self.driver.find_element_by_xpath("//button[contains(text(), 'Unfollow')]").click()
-                print("Refreshing to confirm unfollow...")
-                time.sleep(random.normalvariate(1.2, 0.08))
-                self.driver.refresh()
-                
-                for refresh_number in range (4):
+
+                for refresh_number in range (10):
                     try:
-                        time.sleep(random.normalvariate(3.2, 0.18))
+                        print("Refreshing to confirm unfollow...")
+                        time.sleep(random.normalvariate(1.2, 0.08))
+                        self.driver.refresh()
+                        wait_time = 3 + refresh_number*2
+                        time.sleep(random.normalvariate(wait_time, 0.18))
+                        buttons = self.driver.find_element_by_xpath("/html/body/div[1]/section/main/div/header/section/div[2]/div/div/div[2]/div/span/span[1]/button").click()
+                        check_buttons = self.driver.find_elements_by_xpath("/html/body/div[3]/section/main/div/header/section/div[1]/div[1]/div/div/div/span/span[1]/button")
+                        if(len(check_buttons) > 0):
+                            check_buttons.click()
+                        time.sleep(random.normalvariate(1.8, 0.05))
                         self.driver.find_element_by_xpath("//button[contains(text(), 'Unfollow')]").click()
                     except NoSuchElementException:
                         print("Unfollow confirmed")
