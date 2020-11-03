@@ -95,8 +95,8 @@ class InstagramBot:
 
 
     def get_names(self, lc):
-        self.make_driver_wait("/html/body/div[4]/div/div/div[2]")
-        scroll_box = self.driver.find_element_by_xpath("/html/body/div[4]/div/div/div[2]")
+        self.make_driver_wait("/html/body/div[5]/div/div/div[2]")
+        scroll_box = self.driver.find_element_by_xpath("/html/body/div[5]/div/div/div[2]")
         names = []
         links = []
         x = 0
@@ -424,9 +424,12 @@ class InstagramBot:
                     button4 = self.driver.find_elements_by_xpath("/html/body/div[4]/div/div/div[2]/ul/div/li[{}]/div/div[2]/button"\
                         .format(lc))
                     button5 = self.driver.find_elements_by_xpath("/html/body/div[5]/div/div/div[2]/ul/div/li[{}]/div/div[3]/button"\
-                            .format(lc))
+                        .format(lc))
                     button6 = self.driver.find_elements_by_xpath("/html/body/div[5]/div/div/div[2]/ul/div/li[{}]/div/div[2]/button"\
-                            .format(lc))
+                        .format(lc))
+
+                    #follow_cap_button = self.driver.find_elements_by_xpath("")
+
 
                     if (len(button1) > 0):
                         button1[0].click()
@@ -446,6 +449,10 @@ class InstagramBot:
                     elif (len(button6) > 0):
                         button6[0].click()
                         print('button6 ' + str(lc) + ' pressed')
+                    """elif(len(follow_cap_button) > 0):
+                        party = AudioSegment.from_mp3('Party_Horn_Sound_Effect.mp3')
+                        play(party)
+                        print("Follower Limit Reached!\n Exiting Program in 10 seconds...")"""
 
                 except ElementClickInterceptedException:
                     #attempt to click cancel on one xpath
@@ -539,16 +546,50 @@ class InstagramBot:
 #code under here will execute if the name called is main
 if __name__ == '__main__':
 
-    ig_bot = InstagramBot(un, pw)
-    
-    #ig_bot.like_latest_posts('connorclarkxt', 20, 'like')
-    #ig_bot.like_tag_posts('halo4', 12, 'like')
-    #print(ig_bot.follower_amt('true_halo_memes'))
+    print("***Menu***")
+    time.sleep(0.25)
+
+    choice = input("""
+1: Follow users from profile
+2: Follow users from tag [WIP]
+3: Find Unfollowers
+4: Unfollow users
+q: Quit    
+______________________________
+
+""")
+
+    if (choice == "1"):
+        user = input('Enter user to follow followers of: ')
+        ig_bot = InstagramBot(un, pw)
+        ig_bot.follow_multiple(user)
+
+    elif (choice == "2"):
+        tag = input('Enter tag to follow profiles from: ')
+        ig_bot = InstagramBot(un, pw)
+        ig_bot.follow_top_liked(tag)
+
+    elif (choice == "3"):
+        print("Navigating to '" +  un + "' to acquire users")
+        ig_bot = InstagramBot(un, pw)
+        ig_bot.get_unfollowers(un)
+
+    elif (choice == "4"):
+        print("Unfollowing users from 'notfollowingback.txt'")
+        ig_bot = InstagramBot(un, pw)
+        ig_bot.mass_unfollow()
+
+    elif (choice == "q" or choice == "Q"):
+        print("Closing...")
+        time.sleep(1)
+        sys.exit()
+
+    else:
+        print("Please select valid option")
 
 
-    
     #ig_bot.get_unfollowers('brandonator24')
-    ig_bot.mass_unfollow()
+    #ig_bot.mass_unfollow()
 
     #ig_bot.follow_multiple('halo')
     #ig_bot.follow_top_liked('minecraftmemes') 
