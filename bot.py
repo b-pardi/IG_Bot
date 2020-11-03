@@ -322,19 +322,13 @@ class InstagramBot:
         profiles = []
         index = 0
         for line in f:
-            #profiles.insert(index, index)
             profiles.append(line.strip())
             index += 1
 
-        #profiles_enum = enumerate(profiles)
         f.close()
         print("Users found")
-        count, x, check_runs, limit, refresh_number = 0, 0, 0, 5, 0
+        count, x, refresh_number = 0, 0, 0
         for name in profiles:
-            """if ((item[0]+1) % limit == 0):
-                profiles[i,en] =(profiles[i,en]) + (limit * check_runs)
-                profiles[i,en] = profiles[i,en+1-limit]
-                check_runs += 1  #20, 4"""
             time.sleep(random.normalvariate(9.5, 1.125))
             self.nav_user(name)
             time.sleep(random.normalvariate(2.5, 0.025))
@@ -366,7 +360,6 @@ class InstagramBot:
             count +=1
             print(str(count) + ". Unfollowed user: " + profiles[x])
             x += 1            
-            #checker +=1
         
         party = AudioSegment.from_mp3('Party_Horn_Sound_Effect.mp3')
         play(party)
@@ -398,9 +391,7 @@ class InstagramBot:
         followers_button = self.driver.find_element_by_xpath("//a[contains(@href, '/{}/followers')]".format(user))
         followers_button.click()
         time.sleep(5)
-        #WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(By.XPATH("//button[contains(text(), '')]"))
         followers_popup = self.driver.find_element_by_xpath("/html/body/div[5]/div/div/div[2]")
-        #/html/body/div[7]/div/div/div[2]/ul
         print("Follower box opened")
         #follower_amt = self.follower_amt(user)
         #follower_popup_range = int(follower_amt[0])
@@ -429,7 +420,7 @@ class InstagramBot:
                             .format(lc))
                     button6 = self.driver.find_elements_by_xpath("/html/body/div[5]/div/div/div[2]/ul/div/li[{}]/div/div[2]/button"\
                             .format(lc))
-                    #for i in range(1,5):/html/body/div[5]/div/div/div[2]/ul/div/li[21]/div/div[2]/button
+
                     if (len(button1) > 0):
                         button1[0].click()
                         print('button1 ' + str(lc) + ' pressed')
@@ -452,7 +443,7 @@ class InstagramBot:
                 except ElementClickInterceptedException:
                     #attempt to click cancel on one xpath
                     self.driver.find_element_by_xpath("//button[contains(text(), 'Cancel')]").click()
-                    print(str(lc) + ': Already following user')#/html/body/div[6]/div/div/div/div[3]/button[2]
+                    print(str(lc) + ': Already following user')
                     f -= 1
 
                 except StaleElementReferenceException:
