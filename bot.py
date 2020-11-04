@@ -118,10 +118,10 @@ class InstagramBot:
             print("executed loop scroll: " + str(x) + " times")
             last_ht += 1
 
-        self.make_driver_wait("/html/body/div[4]/div/div/div[1]/div/div[2]/button")
-        self.driver.find_element_by_xpath("/html/body/div[4]/div/div/div[1]/div/div[2]/button").click()
-            
+        self.make_driver_wait("/html/body/div[5]/div/div/div[1]/div/div[2]/button")
+        self.driver.find_element_by_xpath("/html/body/div[5]/div/div/div[1]/div/div[2]/button").click()
         return names
+
 
     #NEEDS: add option for 'm' million followers
     def follower_amt(self, user):
@@ -259,7 +259,8 @@ class InstagramBot:
         lst = self.follower_amt(user)
         fers = lst[0]
         fing = lst[1]
-        self.driver.find_element_by_xpath("//a[contains(@href,'/{}')]".format(self.username)).click()
+        #self.driver.find_element_by_xpath("//a[contains(@href,'/{}')]".format(user)).click()
+        self.nav_user(user)
         time.sleep(random.normalvariate(3.4, 0.2))
         self.make_driver_wait("//a[contains(@href, '/following')]")
         self.driver.find_element_by_xpath("//a[contains(@href, '/following')]").click()
@@ -338,17 +339,22 @@ class InstagramBot:
                 time.sleep(random.normalvariate(0.8, 0.05))
                 self.driver.find_element_by_xpath("//button[contains(text(), 'Unfollow')]").click()
 
-                for refresh_number in range (10):
+                for refresh_number in range (6):
                     try:
                         print("Refreshing to confirm unfollow...")
                         time.sleep(random.normalvariate(1.2, 0.08))
                         self.driver.refresh()
-                        wait_time = 3 + refresh_number*2
+                        wait_time = 5 + refresh_number**2
                         time.sleep(random.normalvariate(wait_time, 0.18))
-                        buttons = self.driver.find_element_by_xpath("/html/body/div[1]/section/main/div/header/section/div[2]/div/div/div[2]/div/span/span[1]/button").click()
-                        check_buttons = self.driver.find_elements_by_xpath("/html/body/div[3]/section/main/div/header/section/div[1]/div[1]/div/div/div/span/span[1]/button")
+                        buttons = self.driver.find_elements_by_xpath("//button[*]")
+                        check_buttons = self.driver.find_elements_by_xpath("/html/body/div[1]/section/main/div/header/section/div[2]/div/div/div[1]/div/button")
                         if(len(check_buttons) > 0):
-                            check_buttons.click()
+                            print("repeating unfollow...")
+                            time.sleep(random.normalvariate(1, 0.054))
+                            check_buttons[0].click()
+                        if(len(buttons) > 0):
+                            print("repeating unfollow")
+                            buttons[0].click()
                         time.sleep(random.normalvariate(1.8, 0.05))
                         self.driver.find_element_by_xpath("//button[contains(text(), 'Unfollow')]").click()
                     except NoSuchElementException:
@@ -572,7 +578,7 @@ ______________________________
     elif (choice == "3"):
         print("Navigating to '" +  un + "' to acquire users")
         ig_bot = InstagramBot(un, pw)
-        ig_bot.get_unfollowers(un)
+        ig_bot.get_unfollowers("mark.b.dyer")
 
     elif (choice == "4"):
         print("Unfollowing users from 'notfollowingback.txt'")
