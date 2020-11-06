@@ -314,26 +314,27 @@ class InstagramBot:
         plays party horn when complete
     Args: (none)
     Needs:
+        remove entry after unfollow confirmed
         Error checking for when instagram stops loading profiles
         Error checking for if line is empty
     """
     def mass_unfollow(self):
         print("Gathering users from 'notfollowingback.txt'...")
-        f = open("notfollowingback.txt", 'r+')
+        nfb = open("notfollowingback.txt", 'r+')
         profiles = []
         index = 0
-        for line in f:
+        for line in nfb:
             profiles.append(line.strip())
             index += 1
 
-        f.close()
+        nfb.close()
         print("Users found")
         count, x, refresh_number = 0, 0, 0
         for name in profiles:
-            time.sleep(random.normalvariate(9.5, 1.125))
+            time.sleep(random.normalvariate(5.5, 0.425))
             self.nav_user(name)
             time.sleep(random.normalvariate(2.5, 0.025))
-
+            
             try:
                 buttons = self.driver.find_elements_by_xpath("//button[*]")[0].click()
                 time.sleep(random.normalvariate(0.8, 0.05))
@@ -367,12 +368,30 @@ class InstagramBot:
                 pass
 
             except IndexError:
-                print("User no longer exists")
-                pass
+                error_header = self.driver.find_elements_by_class_name("error-container -cx-PRIVATE-ErrorPage__errorContainer -cx-PRIVATE-ErrorPage__errorContainer__")
+                error_header_v2 = self.driver.find_elements_by_xpath("//h2[contains(text(), 'Error')]")
+                if(len(error_header) > 0 or len(error_header_v2) > 0):
+                    print("Unfollow Limit Reached, try again later\n\nclosing in 5 seconds...")
+                    time.sleep(5)
+                    self.driver.save_screenshot("unfollowlimit.png")
+                    self.driver.quit()
+                    quit()
+                else:
+                    print("User no longer exists")
+                    pass
             
             count +=1
             print(str(count) + ". Unfollowed user: " + profiles[x])
-            x += 1            
+            
+            with open("notfollowingback.txt", "r") as nfbr:
+                profiles_new = nfbr.readlines()
+            with open("notfollowingback.txt", "w") as nfbr:
+                for line in profiles_new:
+                    if (line.strip("\n") != profiles[x]):
+                        nfbr.write(line)
+            print("User " + profiles[x] + " removed from list")
+
+            x += 1
         
         party = AudioSegment.from_mp3('Party_Horn_Sound_Effect.mp3')
         play(party)
@@ -461,21 +480,38 @@ class InstagramBot:
                         print("Follower Limit Reached!\n Exiting Program in 10 seconds...")"""
 
                 except ElementClickInterceptedException:
-                    #attempt to click cancel on one xpath
-                    self.driver.find_element_by_xpath("//button[contains(text(), 'Cancel')]").click()
-                    print(str(lc) + ': Already following user')
-                    f -= 1
+                    cancel_unfollow_button = self.driver.find_elements_by_xpath("//button[contains(text(), 'Cancel')]")
+                    follow_limit_buttons = self.driver.find_elements_by_xpath("//button[contains(text(), 'OK')]")
+                    if (len(cancel_unfollow_button) > 0):
+                        cancel_unfollow_button[0].click()
+                        print(str(lc) + ': Already following user')
+                        f -= 1
+                    elif (len(follow_limit_buttons) > 0):
+                        input("Potential follow Limit Reached! Try again later :)\n\nPress any key to exit")
+                        self.driver.save_screenshot("followlimit.png")
+                        time.sleep(5)
+                        self.driver.quit()
+                        quit()
 
                 except StaleElementReferenceException:
                     continue
 
-                except ElementClickInterceptedException:
-                    input("Potential follow Limit Reached! Try again later :)\nPress any key to exit")
-                    self.driver.quit()
+                except IndexError:
+                    error_header = self.driver.find_elements_by_class_name("error-container -cx-PRIVATE-ErrorPage__errorContainer -cx-PRIVATE-ErrorPage__errorContainer__")
+                    error_header_v2 = self.driver.find_elements_by_xpath("//h2[contains(text(), 'Error')]")
+                    if(len(error_header) > 0 or len(error_header_v2) > 0):
+                        print("Follow Limit Reached, try again later\n\nclosing in 5 seconds...")
+                        self.driver.save_screenshot("follow_multiple()_Indexerror.png")
+                        time.sleep(5)
+                        self.driver.quit()
+                        quit()
 
                 except NoSuchElementException:
                     input("error occured, please see console\nPress any key to exit")
+                    self.driver.save_screenshot("follow_multiple()_NSEEerror.png")
+                    time.sleep(2)
                     self.driver.quit()
+                    quit()
                 
             #JS to scroll through list
             try:
