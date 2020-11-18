@@ -13,7 +13,7 @@ class InstagramBot:
         self.tag_url = 'explore/tags'
         
         #pass exe to an instance of chrome from selenium's webdriver
-        self.driver = webdriver.Chrome()
+        self.driver = webdriver.Chrome('/usr/bin/chromedriver')
         print("Loaded Chromedriver")
         self.login()
 
@@ -38,11 +38,11 @@ class InstagramBot:
         print("Logged in succesfully to account: " + self.username)
         #self.driver.find_element_by_xpath("//div[contains(text(), 'Log In')]")[0].click()
         
-        time.sleep(3)
+        time.sleep(4)
         login_save_button = self.driver.find_elements_by_xpath("//button[contains(text(), 'Not Now')]")[0]
         login_save_button.click() 
         print("Closed popup 1")
-        time.sleep(random.normalvariate(1.5, 0.2))
+        time.sleep(random.normalvariate(2.5, 0.2))
         #WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(By.XPATH("//button[contains(text(), 'Not Now')]")))
         self.make_driver_wait("//button[contains(text(), 'Not Now')]")
         notifications_button = self.driver.find_elements_by_xpath("//button[contains(text(), 'Not Now')]")[0]
@@ -171,6 +171,17 @@ class InstagramBot:
         return lst
 
 
+    def auto_scroll(self, num_users):
+        scrolls = int(num_users) / 12
+        num_scrolls = int(scrolls)
+        scroll_box = self.driver.find_element_by_xpath("/html/body/div[5]/div/div/div[2]")
+        for i in range(num_scrolls):
+            self.driver.execute_script('arguments[0].scrollTop = arguments[0].scrollHeight', scroll_box)
+
+        print(f"Scrolled {scrolls} times past {num_users}.\nAll caught up!")
+
+
+
     #
     #END HELPER FUNCTIONS
     #
@@ -202,6 +213,93 @@ class InstagramBot:
             self.driver.find_element_by_xpath("/html/body/div[4]/div[2]/div/article/div[3]/section[1]/span[1]/button").click()
             time.sleep(random.normalvariate(0.4, 0.2))
             self.driver.find_element_by_xpath("/html/body/div[4]/div[1]/div/div/a[2]").click()
+
+
+
+    """
+    W.I.P.
+
+    Task: 
+        Likes posts from user's feed
+    Args:
+        int numposts: number of posts to like
+    Needs:
+        do not click like if button already liked,
+        do not like ads
+    """
+    def like_home_feed(self, numposts):
+        time.sleep(3)
+        pic_posts = []
+        vid_posts = []
+        posts = []
+        for i in range(0, 4):
+            print("Scrolling...")
+            self.driver.execute_script("window.scrollBy(0,document.body.scrollHeight)")
+            time.sleep(random.normalvariate(2,0.4))
+
+            print("Gathering posts...")
+            pic_posts += self.driver.find_elements_by_class_name("_9AhH0")
+            vid_posts += self.driver.find_elements_by_class_name("fXIG0")
+            print("Gathered " + str(len(pic_posts)) + " picture posts")
+            print("Gathered " + str(len(vid_posts)) + " picture posts")
+            time.sleep(random.normalvariate(2,0.4))
+
+        actionChains = ActionChains(self.driver)
+        posts = pic_posts + vid_posts
+        print("\n"+str(len(posts))+"\n\n")
+        for post in posts:
+            print(str(posts.index(post)+1) + str(post))
+
+        for index, post in enumerate(pic_posts):
+            if post in pic_posts:
+                try:
+                    print("Liking image post " + str(index) + " ...")
+                    #actionChains.move_to_element(post).perform()
+                    self.driver.execute_script("arguments[0].scrollIntoView();", post)
+                    time.sleep(1)
+                    actionChains.double_click(on_element=post).perform()
+                    print("Image post liked")
+
+                except StaleElementReferenceException:
+                    print("scrolling to top...")
+                    self.driver.find_element_by_tag_name('body').send_keys(Keys.CONTROL + Keys.HOME)
+                    if index > 0:
+                        post = pic_posts[index - 1]
+                        print(str(post))
+
+                time.sleep(random.normalvariate(6,0.5))
+
+            elif post in vid_posts:
+                print("vid post\nskipping for now...")
+                pass
+        """
+            try:
+                like_count = 0 + lc_start
+            except UnboundLocalError:
+                like_count = 0
+                pass
+
+            for like_num in range(like_count, (len(pic_posts1) + len(vid_posts1))):
+                try:
+                    actionChains = ActionChains(self.driver)
+                    if(len(pic_posts1) > like_num):
+                        print("Liking image post " + like_num + " ...")
+                        actionChains.double_click(pic_posts1[like_num]).perform()
+                        print("Image post liked")
+                        time.sleep(random.normalvariate(6,0.5))
+                    
+                    if(len(vid_posts1) > like_num):
+                        print("Liking video post " + like_num + " ...")
+                        actionChains.double_click(vid_posts1[like_num]).perform()
+                        print("Video post liked")
+                        time.sleep(random.normalvariate(6,0.5))
+                
+                except:
+                    print("error")
+                
+                lc_start = (len(pic_posts1) + len(vid_posts1))
+        """
+
 
     """
     W.I.P.
@@ -286,12 +384,29 @@ class InstagramBot:
                 for name in followers:
                     f.write("%s\n" % name)
         print("Added to text file 'followers.txt'")
-
+        """
+        following = []
+        followers = []
+        with open('followers.txt', 'r') as fers:
+            for name in fers:
+                following.append(name.strip())    
+        
+        with open('following.txt', 'r') as fing:
+            for name in fing:
+                followers.append(name.strip())
+        """
         print("Cross referencing lists...")        
-        not_following_back = [user for user in following if user not in followers]
+        #not_following_back = [user for user in following if not in followers]
+        not_following_back = []
+        for user in followers:
+            if user not in following:
+                not_following_back.append(user)
+            else:
+                pass
         with open('notfollowingback.txt', 'w') as f:
                 for name in not_following_back:
                     f.write("%s\n" % name)
+
         time.sleep(3)
         print('\n****Unfollowers****')
         prev = " "
@@ -314,26 +429,27 @@ class InstagramBot:
         plays party horn when complete
     Args: (none)
     Needs:
+        remove entry after unfollow confirmed
         Error checking for when instagram stops loading profiles
         Error checking for if line is empty
     """
     def mass_unfollow(self):
         print("Gathering users from 'notfollowingback.txt'...")
-        f = open("notfollowingback.txt", 'r+')
+        nfb = open("notfollowingback.txt", 'r+')
         profiles = []
         index = 0
-        for line in f:
+        for line in nfb:
             profiles.append(line.strip())
             index += 1
 
-        f.close()
+        nfb.close()
         print("Users found")
         count, x, refresh_number = 0, 0, 0
         for name in profiles:
-            time.sleep(random.normalvariate(9.5, 1.125))
+            time.sleep(random.normalvariate(5.5, 0.425))
             self.nav_user(name)
-            time.sleep(random.normalvariate(2.5, 0.025))
-
+            time.sleep(random.normalvariate(42, 8.6))
+            
             try:
                 buttons = self.driver.find_elements_by_xpath("//button[*]")[0].click()
                 time.sleep(random.normalvariate(0.8, 0.05))
@@ -367,12 +483,30 @@ class InstagramBot:
                 pass
 
             except IndexError:
-                print("User no longer exists")
-                pass
+                error_header = self.driver.find_elements_by_class_name("error-container -cx-PRIVATE-ErrorPage__errorContainer -cx-PRIVATE-ErrorPage__errorContainer__")
+                error_header_v2 = self.driver.find_elements_by_xpath("//h2[contains(text(), 'Error')]")
+                if(len(error_header) > 0 or len(error_header_v2) > 0):
+                    print("Unfollow Limit Reached, try again later\n\nclosing in 5 seconds...")
+                    time.sleep(5)
+                    self.driver.save_screenshot("unfollowlimit.png")
+                    self.driver.quit()
+                    quit()
+                else:
+                    print("User no longer exists")
+                    pass
             
             count +=1
             print(str(count) + ". Unfollowed user: " + profiles[x])
-            x += 1            
+            
+            with open("notfollowingback.txt", "r") as nfbr:
+                profiles_new = nfbr.readlines()
+            with open("notfollowingback.txt", "w") as nfbr:
+                for line in profiles_new:
+                    if (line.strip("\n") != profiles[x]):
+                        nfbr.write(line)
+            print("User " + profiles[x] + " removed from list")
+
+            x += 1
         
         party = AudioSegment.from_mp3('Party_Horn_Sound_Effect.mp3')
         play(party)
@@ -389,11 +523,12 @@ class InstagramBot:
     Args:
         str user: target user account with followers that are those who user wants follow backs from
     Needs:
+        LIKE POSTS OF USERS AFTER FOLLOWING
         WebDriverWaits
         Error checking for when Instagram cuts user off from following further (quit upon seeing message)
         Possibly needs more potential xpaths for follow buttons (see button 1 and 2)
     """
-    def follow_multiple(self, user):
+    def follow_multiple(self, user, wait_time, num_users, recent_follow):
         #navigate to user profile
         self.nav_user(user)
         print("Navigated to profile: " + user)
@@ -406,10 +541,12 @@ class InstagramBot:
         time.sleep(5)
         followers_popup = self.driver.find_element_by_xpath("/html/body/div[5]/div/div/div[2]")
         print("Follower box opened")
+        if (recent_follow == 'y' or 'Y'):
+            self.auto_scroll(num_users)
         #follower_amt = self.follower_amt(user)
         #follower_popup_range = int(follower_amt[0])
         #for i in range(int(follower_popup_range/12)):
-        for i in range(1000):
+        for i in range(300):
             time.sleep(random.normalvariate(2, 0.3))
             f = 0
             while f<=12:
@@ -417,7 +554,7 @@ class InstagramBot:
 
                 try:
                     #try to click follow button
-                    time.sleep(random.normalvariate(9.6, 1.3))   
+                    time.sleep(random.normalvariate(int(wait_time), 4))   
                     lc = f + (i*12)
                     print('pressing ' + str(lc) + '...')
 
@@ -433,9 +570,6 @@ class InstagramBot:
                         .format(lc))
                     button6 = self.driver.find_elements_by_xpath("/html/body/div[5]/div/div/div[2]/ul/div/li[{}]/div/div[2]/button"\
                         .format(lc))
-
-                    #follow_cap_button = self.driver.find_elements_by_xpath("")
-
 
                     if (len(button1) > 0):
                         button1[0].click()
@@ -455,27 +589,46 @@ class InstagramBot:
                     elif (len(button6) > 0):
                         button6[0].click()
                         print('button6 ' + str(lc) + ' pressed')
-                    """elif(len(follow_cap_button) > 0):
-                        party = AudioSegment.from_mp3('Party_Horn_Sound_Effect.mp3')
-                        play(party)
-                        print("Follower Limit Reached!\n Exiting Program in 10 seconds...")"""
 
                 except ElementClickInterceptedException:
-                    #attempt to click cancel on one xpath
-                    self.driver.find_element_by_xpath("//button[contains(text(), 'Cancel')]").click()
-                    print(str(lc) + ': Already following user')
-                    f -= 1
+                    cancel_unfollow_button = self.driver.find_elements_by_xpath("//button[contains(text(), 'Cancel')]")
+                    cancel_unfollow_button2 = self.driver.find_elements_by_xpath("/html/body/div[6]/div/div/div/div[3]/button[2]")
+                    follow_limit_buttons = self.driver.find_elements_by_xpath("//button[contains(text(), 'OK')]")
+                    if (len(cancel_unfollow_button) > 0):
+                        cancel_unfollow_button[0].click()
+                        print(str(lc) + ': Already following user')
+                        f -= 1
+                    if (len(cancel_unfollow_button2) > 0):
+                        cancel_unfollow_button2[0].click()
+                        print(str(lc) + ': Already following user')
+                        f -= 1
+                    elif (len(follow_limit_buttons) > 0):
+                        input("Potential follow Limit Reached! Try again later :)\n\nPress any key to exit")
+                        self.driver.save_screenshot("followlimit.png")
+                        time.sleep(5)
+                        self.driver.quit()
+                        quit()
 
                 except StaleElementReferenceException:
+                    self.driver.execute_script('arguments[0].scrollTop = arguments[0].scrollHeight', followers_popup)
                     continue
 
-                except ElementClickInterceptedException:
-                    input("Potential follow Limit Reached! Try again later :)\nPress any key to exit")
-                    self.driver.quit()
+                except IndexError:
+                    error_header = self.driver.find_elements_by_class_name("error-container -cx-PRIVATE-ErrorPage__errorContainer -cx-PRIVATE-ErrorPage__errorContainer__")
+                    error_header_v2 = self.driver.find_elements_by_xpath("//h2[contains(text(), 'Error')]")
+                    if(len(error_header) > 0 or len(error_header_v2) > 0):
+                        print("Follow Limit Reached, try again later\n\nclosing in 5 seconds...")
+                        self.driver.save_screenshot("follow_multiple()_Indexerror.png")
+                        time.sleep(5)
+                        self.driver.quit()
+                        quit()
 
                 except NoSuchElementException:
                     input("error occured, please see console\nPress any key to exit")
+                    self.driver.save_screenshot("follow_multiple()_NSEEerror.png")
+                    time.sleep(2)
                     self.driver.quit()
+                    quit()
                 
             #JS to scroll through list
             try:
@@ -484,6 +637,13 @@ class InstagramBot:
                 time.sleep(2)
             except StaleElementReferenceException:
                 continue
+
+        
+        print("Safe limit of 330 people followed\nclosing program...")
+        self.driver.save_screenshot("follow_multiple()_330limit.png")
+        time.sleep(2)
+        self.driver.quit()
+        quit()
 
     """
     W.I.P.  
@@ -560,6 +720,8 @@ if __name__ == '__main__':
 2: Follow users from tag [WIP]
 3: Find Unfollowers
 4: Unfollow users
+5: Like home page posts [WIP]
+
 q: Quit    
 ______________________________
 
@@ -567,23 +729,47 @@ ______________________________
 
     if (choice == "1"):
         user = input('Enter user to follow followers of: ')
-        ig_bot = InstagramBot(un, pw)
-        ig_bot.follow_multiple(user)
+        wait_time = input('Enter wait time between follows: ')
+        recent_follow = input('Have you followed this account recently?\n (enter y or n):  ')
+        if (recent_follow == ('y' or 'Y')):
+            num_users = input("how many users to scroll past?\n(About how many users were followed recently?):  ")
+            print(f"Awesome! skipping {num_users} users and following from {user}")
+            time.sleep(1)
+            ig_bot = InstagramBot(un, pw)
+            ig_bot.follow_multiple(user, wait_time, num_users, recent_follow)
+        else:
+            num_users = 0
+            recent_follow = 'n'
+            time.sleep(1)
+            ig_bot = InstagramBot(un, pw)
+            ig_bot.follow_multiple(user, wait_time, num_users, recent_follow)
 
     elif (choice == "2"):
         tag = input('Enter tag to follow profiles from: ')
+        time.sleep(1)
         ig_bot = InstagramBot(un, pw)
         ig_bot.follow_top_liked(tag)
 
     elif (choice == "3"):
-        print("Navigating to '" +  un + "' to acquire users")
+        print("Navigating to '" +  un + "' to acquire users\nPlease do not interrupt process!\n\
+        The time it takes increases exponentially with the more followers/following you have")
+        time.sleep(1)
         ig_bot = InstagramBot(un, pw)
-        ig_bot.get_unfollowers("mark.b.dyer")
+        ig_bot.get_unfollowers(un)
 
     elif (choice == "4"):
         print("Unfollowing users from 'notfollowingback.txt'")
+        time.sleep(1)
         ig_bot = InstagramBot(un, pw)
         ig_bot.mass_unfollow()
+
+    elif(choice == "5"):
+        numposts = int(input("How many posts do you want to like? "))
+        time.sleep(0.1)
+        print("Will do!\nnavigating to home page to like posts...")
+        time.sleep(1)
+        ig_bot = InstagramBot(un, pw)
+        ig_bot.like_home_feed(numposts)
 
     elif (choice == "q" or choice == "Q"):
         print("Closing...")
@@ -593,6 +779,7 @@ ______________________________
     else:
         print("Please select valid option")
 
+    #ig_bot.like_home_feed('3')
 
     #ig_bot.get_unfollowers('brandonator24')
     #ig_bot.mass_unfollow()
