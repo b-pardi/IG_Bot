@@ -528,7 +528,7 @@ class InstagramBot:
         Error checking for when Instagram cuts user off from following further (quit upon seeing message)
         Possibly needs more potential xpaths for follow buttons (see button 1 and 2)
     """
-    def follow_multiple(self, user, wait_time):
+    def follow_multiple(self, user, wait_time, num_users, recent_follow):
         #navigate to user profile
         self.nav_user(user)
         print("Navigated to profile: " + user)
@@ -541,6 +541,8 @@ class InstagramBot:
         time.sleep(5)
         followers_popup = self.driver.find_element_by_xpath("/html/body/div[5]/div/div/div[2]")
         print("Follower box opened")
+        if (recent_follow == 'y' or 'Y'):
+            self.auto_scroll(num_users)
         #follower_amt = self.follower_amt(user)
         #follower_popup_range = int(follower_amt[0])
         #for i in range(int(follower_popup_range/12)):
@@ -731,11 +733,16 @@ ______________________________
         recent_follow = input('Have you followed this account recently?\n (enter y or n):  ')
         if (recent_follow == ('y' or 'Y')):
             num_users = input("how many users to scroll past?\n(About how many users were followed recently?):  ")
-            print(f"Awesome! Following {num_users}")
-            ig_bot.auto_scroll(num_users)
-        time.sleep(1)
-        ig_bot = InstagramBot(un, pw)
-        ig_bot.follow_multiple(user, wait_time)
+            print(f"Awesome! skipping {num_users} users and following from {user}")
+            time.sleep(1)
+            ig_bot = InstagramBot(un, pw)
+            ig_bot.follow_multiple(user, wait_time, num_users, recent_follow)
+        else:
+            num_users = 0
+            recent_follow = 'n'
+            time.sleep(1)
+            ig_bot = InstagramBot(un, pw)
+            ig_bot.follow_multiple(user, wait_time, num_users, recent_follow)
 
     elif (choice == "2"):
         tag = input('Enter tag to follow profiles from: ')
