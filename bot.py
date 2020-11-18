@@ -176,6 +176,7 @@ class InstagramBot:
         num_scrolls = int(scrolls)
         scroll_box = self.driver.find_element_by_xpath("/html/body/div[5]/div/div/div[2]")
         for i in range(num_scrolls):
+            time.sleep(2.5)
             self.driver.execute_script('arguments[0].scrollTop = arguments[0].scrollHeight', scroll_box)
 
         print(f"Scrolled {scrolls} times past {num_users}.\nAll caught up!")
@@ -546,7 +547,7 @@ class InstagramBot:
         #follower_amt = self.follower_amt(user)
         #follower_popup_range = int(follower_amt[0])
         #for i in range(int(follower_popup_range/12)):
-        for i in range(300):
+        for i in range(1000):
             time.sleep(random.normalvariate(2, 0.3))
             f = 0
             while f<=12:
@@ -555,7 +556,7 @@ class InstagramBot:
                 try:
                     #try to click follow button
                     time.sleep(random.normalvariate(int(wait_time), 4))   
-                    lc = f + (i*12)
+                    lc = num_users + f + (i*12)
                     print('pressing ' + str(lc) + '...')
 
                     button1 = self.driver.find_elements_by_xpath("/html/body/div[6]/div/div/div[2]/ul/div/li[{}]/div/div[3]/button"\
@@ -570,6 +571,7 @@ class InstagramBot:
                         .format(lc))
                     button6 = self.driver.find_elements_by_xpath("/html/body/div[5]/div/div/div[2]/ul/div/li[{}]/div/div[2]/button"\
                         .format(lc))
+                    cancel_unfollow_button2 = self.driver.find_elements_by_xpath("/html/body/div[6]/div/div/div/div[3]/button[2]")
 
                     if (len(button1) > 0):
                         button1[0].click()
@@ -589,6 +591,7 @@ class InstagramBot:
                     elif (len(button6) > 0):
                         button6[0].click()
                         print('button6 ' + str(lc) + ' pressed')
+                    
 
                 except ElementClickInterceptedException:
                     cancel_unfollow_button = self.driver.find_elements_by_xpath("//button[contains(text(), 'Cancel')]")
@@ -598,7 +601,7 @@ class InstagramBot:
                         cancel_unfollow_button[0].click()
                         print(str(lc) + ': Already following user')
                         f -= 1
-                    if (len(cancel_unfollow_button2) > 0):
+                    elif (len(cancel_unfollow_button2) > 0):
                         cancel_unfollow_button2[0].click()
                         print(str(lc) + ': Already following user')
                         f -= 1
@@ -732,7 +735,8 @@ ______________________________
         wait_time = input('Enter wait time between follows: ')
         recent_follow = input('Have you followed this account recently?\n (enter y or n):  ')
         if (recent_follow == ('y' or 'Y')):
-            num_users = input("how many users to scroll past?\n(About how many users were followed recently?):  ")
+            snum_users = input("how many users to scroll past?\n(About how many users were followed recently?):  ")
+            num_users = int(snum_users)
             print(f"Awesome! skipping {num_users} users and following from {user}")
             time.sleep(1)
             ig_bot = InstagramBot(un, pw)
