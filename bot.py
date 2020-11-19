@@ -176,6 +176,7 @@ class InstagramBot:
         num_scrolls = int(scrolls)
         scroll_box = self.driver.find_element_by_xpath("/html/body/div[5]/div/div/div[2]")
         for i in range(num_scrolls):
+            time.sleep(2.5)
             self.driver.execute_script('arguments[0].scrollTop = arguments[0].scrollHeight', scroll_box)
             time.sleep(4.5)
 
@@ -449,7 +450,7 @@ class InstagramBot:
         for name in profiles:
             time.sleep(random.normalvariate(5.5, 0.425))
             self.nav_user(name)
-            time.sleep(random.normalvariate(42, 8.6))
+            time.sleep(random.normalvariate(22, 8.6))
             
             try:
                 buttons = self.driver.find_elements_by_xpath("//button[*]")[0].click()
@@ -591,6 +592,7 @@ class InstagramBot:
                     elif (len(button6) > 0):
                         button6[0].click()
                         print('button6 ' + str(lc) + ' pressed')
+                    
 
                 except ElementClickInterceptedException:
                     cancel_unfollow_button = self.driver.find_elements_by_xpath("//button[contains(text(), 'Cancel')]")
