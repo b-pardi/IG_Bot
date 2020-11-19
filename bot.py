@@ -449,7 +449,7 @@ class InstagramBot:
         for name in profiles:
             time.sleep(random.normalvariate(5.5, 0.425))
             self.nav_user(name)
-            time.sleep(random.normalvariate(42, 8.6))
+            time.sleep(random.normalvariate(22, 8.6))
             
             try:
                 buttons = self.driver.find_elements_by_xpath("//button[*]")[0].click()
