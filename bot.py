@@ -358,7 +358,7 @@ class InstagramBot:
         lst = self.follower_amt(user)
         fers = lst[0]
         fing = lst[1]
-        #self.driver.find_element_by_xpath("//a[contains(@href,'/{}')]".format(user)).click()
+        ### comment out from here to next '###' to reprocess list cross referencing
         self.nav_user(user)
         time.sleep(random.normalvariate(3.4, 0.2))
         self.make_driver_wait("//a[contains(@href, '/following')]")
@@ -372,7 +372,7 @@ class InstagramBot:
                 for name in following:
                     f.write("%s\n" % name)
         print("Added to text file 'following.txt'")
-
+        
         time.sleep(random.normalvariate(3.4, 0.2))
         self.make_driver_wait("//a[contains(@href, '/followers')]")
         self.driver.find_element_by_xpath("//a[contains(@href, '/followers')]").click()
@@ -388,19 +388,19 @@ class InstagramBot:
         """
         following = []
         followers = []
-        with open('followers.txt', 'r') as fers:
-            for name in fers:
-                following.append(name.strip())    
-        
         with open('following.txt', 'r') as fing:
             for name in fing:
+                following.append(name.strip())    
+        
+        with open('followers.txt', 'r') as fers:
+            for name in fers:
                 followers.append(name.strip())
-        """
+        """###
         print("Cross referencing lists...")        
         #not_following_back = [user for user in following if not in followers]
         not_following_back = []
-        for user in followers:
-            if user not in following:
+        for user in following:
+            if user not in followers:
                 not_following_back.append(user)
             else:
                 pass
