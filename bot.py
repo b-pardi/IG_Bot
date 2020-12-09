@@ -99,10 +99,13 @@ class InstagramBot:
         scroll_box = self.driver.find_element_by_xpath("/html/body/div[5]/div/div/div[2]")
         names = []
         links = []
+        iteration = []
+        time_taken = []
         x = 0
         last_ht, ht = 0, 1
         while last_ht <= (lc/12):
             # last_ht = ht
+            start_time = time.time()
             time.sleep(random.normalvariate(1.4,0.098))
             try:
                 ht = self.driver.execute_script("arguments[0].scrollTo(0, arguments[0].scrollHeight); return arguments[0].scrollHeight;", scroll_box)
@@ -116,11 +119,15 @@ class InstagramBot:
             
             x += 1
             print("executed loop scroll: " + str(x) + " times")
+            end_time = time.time()
+            iteration.append(x)
+            time_taken.append(end_time - start_time)
+
             last_ht += 1
 
         self.make_driver_wait("/html/body/div[5]/div/div/div[1]/div/div[2]/button")
         self.driver.find_element_by_xpath("/html/body/div[5]/div/div/div[1]/div/div[2]/button").click()
-        return names
+        return names, iteration, time_taken
 
 
     #NEEDS: add option for 'm' million followers
@@ -366,12 +373,26 @@ class InstagramBot:
         print("Navigated to user's following")
         time.sleep(random.normalvariate(3.4, 0.2))
         print("acquiring following accounts...")
-        following = self.get_names(fing)
+        following_data = self.get_names(fing)
+        following = following_data[0]
         print("Names retrieved")
         with open('following.txt', 'w') as f:
                 for name in following:
                     f.write("%s\n" % name)
         print("Added to text file 'following.txt'")
+        iteration = following_data[1]
+        time_taken = following_data[2]
+        with open ("time_data.txt", "w") as time_data:
+            time_data.write("***FOLLOWING DATA***\n")
+            for point in iteration:
+                time_data.write(f"{iteration[point-1]}, {time_taken[point-1]}\n")
+            time_data.write("------\n")
+            for point in iteration:
+                time_data.write(f"{iteration[point-1]}\n")
+            time_data.write("------\n")
+            for point in iteration:
+                time_data.write(f"{time_taken[point-1]}\n")
+        print("Added data to 'time_data.txt'")
         
         time.sleep(random.normalvariate(3.4, 0.2))
         self.make_driver_wait("//a[contains(@href, '/followers')]")
@@ -379,12 +400,27 @@ class InstagramBot:
         print("Navigated to user's followers")
         time.sleep(random.normalvariate(3.4, 0.2))
         print("acquiring followers accounts...")
-        followers = self.get_names(fers)
+        followers_data = self.get_names(fers)
+        followers = followers_data[0]
         print("Names retrieved")
         with open('followers.txt', 'w') as f:
                 for name in followers:
                     f.write("%s\n" % name)
         print("Added to text file 'followers.txt'")
+        iteration = followers_data[1]
+        time_taken = followers_data[2]
+        with open ("time_data.txt", "a") as time_data:
+            time_data.write("***FOLLOWERS DATA***\n")
+            for point in iteration:
+                time_data.write(f"{iteration[point-1]}, {time_taken[point-1]}\n")
+            time_data.write("------\n")
+            for point in iteration:
+                time_data.write(f"{iteration[point-1]}\n")
+            time_data.write("------\n")
+            for point in iteration:
+                time_data.write(f"{time_taken[point-1]}\n")
+        print("Appended data to 'time_data.txt'")
+
         """
         following = []
         followers = []
@@ -755,7 +791,7 @@ ______________________________
         ig_bot.follow_top_liked(tag)
 
     elif (choice == "3"):
-        print("Navigating to '" +  un + "' to acquire users\nPlease do not interrupt process!\n\
+        print("Navigating to '" + un + "' to acquire users\nPlease do not interrupt process!\n\
         The time it takes increases exponentially with the more followers/following you have")
         time.sleep(1)
         ig_bot = InstagramBot(un, pw)
