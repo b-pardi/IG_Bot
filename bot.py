@@ -38,12 +38,11 @@ class InstagramBot:
         print("Logged in succesfully to account: " + self.username)
         #self.driver.find_element_by_xpath("//div[contains(text(), 'Log In')]")[0].click()
         
-        time.sleep(4)
+        self.make_driver_wait("/html/body/div[1]/section/main/div/div/div/div/button")
         login_save_button = self.driver.find_elements_by_xpath("//button[contains(text(), 'Not Now')]")[0]
         login_save_button.click() 
         print("Closed popup 1")
         time.sleep(random.normalvariate(2.5, 0.2))
-        #WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(By.XPATH("//button[contains(text(), 'Not Now')]")))
         self.make_driver_wait("//button[contains(text(), 'Not Now')]")
         notifications_button = self.driver.find_elements_by_xpath("//button[contains(text(), 'Not Now')]")[0]
         notifications_button.click() 
@@ -83,7 +82,7 @@ class InstagramBot:
         return b''.join(re.split(br"[^0-9]*", raw_string))
 
     def make_driver_wait(self, element_to_locate, by='xpath'):
-        wait = WebDriverWait(self.driver, 5)
+        wait = WebDriverWait(self.driver, 8)
         if by == 'xpath':
             wait.until(EC.element_to_be_clickable((By.XPATH, element_to_locate)))
         elif by == 'class_name':
@@ -129,54 +128,72 @@ class InstagramBot:
         self.driver.find_element_by_xpath("/html/body/div[5]/div/div/div[1]/div/div[2]/button").click()
         return names, iteration, time_taken
 
-
-    #NEEDS: add option for 'm' million followers
     def follower_amt(self, user):
-        time.sleep(2)
-        
-        html = requests.get('https://www.instagram.com/%s/'%(user))
-        soup = BeautifulSoup(html.text, 'lxml')
-        data = soup.find_all('meta', attrs={'property':'og:description'})
-        text = data[0].get('content').split()
-        user = '%s %s %s' % (text[-3], text[-2], text[-1])
-        followers = text[0]
-        
-        #print(followers.encode('UTF-8'))
-        if followers[-1] == 'k':
-            followers_str = (followers[:-1].encode('UTF-8'))
-            followers = int(self.extract_numbers(followers_str))
-            followers = followers * 1000
-
-        elif followers[-1] == 'm':
-            followers_str = (followers[:-1].encode('UTF-8'))
-            followers = int(self.extract_numbers(followers_str))
-            followers = followers * 1000000
-
+        ig_bot.nav_user('brandonator24')
+        time.sleep(6)
+        tags = ig_bot.driver.find_element_by_xpath('//meta[@property="og:description"]')
+        print(tags.get_attribute("content"))
+        meta_tag = tags.get_attribute("content")
+        #meta_tag = ("1,644 Followers, 2,500 Following, 57 Posts - See Instagram photos and videos from Brandon Pardi (@brandonator24)")
+        reg_num = re.findall(r'\d+\,?\.?\d+k?m?', str(meta_tag))
+        wers_str = reg_num[0]
+        wing_str = reg_num[1]
+        posts_str = reg_num[2]
+        if(re.findall(r'k', str(wers_str))):
+            print("found k")
+            wers = 100*int(wers_str.replace('.', '').strip('k'))
+        elif(re.findall(r'm', str(wers_str))):
+            print("found m")
+            wers = 100000*int(wers_str.replace('.', '').strip('k'))
         else:
-            followers_str = (followers.encode('UTF-8'))
-            followers = int(self.extract_numbers(followers_str))
-            
-        following = text[2]
-        if following[-1] == 'k':
-            following_str = (following[:-1].encode('UTF-8'))
-            following = int(self.extract_numbers(following_str))
-            following = following * 1000
+            wers = int(wers_str.replace(',', ''))
 
-        elif following[-1] == 'm':
-            following_str = (following[:-1].encode('UTF-8'))
-            following = int(self.extract_numbers(following_str))
-            following = following * 1000000
-
+        if(re.findall(r'k', str(wing_str))):
+            print("found k")
+            wing = 100*int(wing_str.replace('.', '').strip('k'))
+        elif(re.findall(r'm', str(wing_str))):
+            print("found m")
+            wing = 100000*int(wing_str.replace('.', '').strip('k'))
         else:
-            following_str = (following.encode('UTF-8'))
-            following = int(self.extract_numbers(following_str))
+            wing = int(wing_str.replace(',', ''))
 
+        print(f"followers: {wers}, following: {wing}, posts: {reg_num[2]}")
+
+        """
+        try:
+            req = requests.get(f'https://www.instagram.com/{user}/')
+        except HTTPError as httperr:
+            print(f"HTTP Error occurred as {httperr}")
+        except (Exception) as err:
+            print(f"Other error occurred as {err}")
+
+        soup = BeautifulSoup(req.content, 'html.parser')
+        stuff = soup.find('meta', property="og:description")
+        #thing = stuff['content'].split()
+        print(stuff)
+        reg_num = re.findall(r'\d+\,?\.?\d+k?m?', str(stuff))
+        wers_str = reg_num[0]
+        wing_str = reg_num[1]
+        posts_str = reg_num[2]
+        if(re.findall(r'k', str(wers_str))):
+            print("found k")
+            wers = 100*int(wers_str.replace('.', '').strip('k'))
+        if(re.findall(r'k', str(wing_str))):
+            print("found k")
+            wing = 100*int(wing_str.replace('.', '').strip('k'))
+        if(re.findall(r'm', str(wers_str))):
+            print("found m")
+            wers = 100000*int(wers_str.replace('.', '').strip('k'))
+        if(re.findall(r'm', str(wing_str))):
+            print("found m")
+            wing = 100000*int(wing_str.replace('.', '').strip('k'))
+    """
         lst = []
-        lst.append(followers)
-        lst.append(following)
+        lst.append(wers)
+        lst.append(wing)
         
         return lst
-
+    
 
     def auto_scroll(self, num_users):
         scrolls = int(num_users) / 12
@@ -362,11 +379,12 @@ class InstagramBot:
         str user: target user to follow   
     """
     def get_unfollowers(self, user):
+        self.nav_user(user)
         lst = self.follower_amt(user)
         fers = lst[0]
         fing = lst[1]
         ### comment out from here to next '###' to reprocess list cross referencing
-        self.nav_user(user)
+        
         time.sleep(random.normalvariate(3.4, 0.2))
         self.make_driver_wait("//a[contains(@href, '/following')]")
         self.driver.find_element_by_xpath("//a[contains(@href, '/following')]").click()
@@ -420,7 +438,7 @@ class InstagramBot:
             for point in iteration:
                 time_data.write(f"{time_taken[point-1]}\n")
         print("Appended data to 'time_data.txt'")
-
+        
         """
         following = []
         followers = []
@@ -760,6 +778,7 @@ if __name__ == '__main__':
 3: Find Unfollowers
 4: Unfollow users
 5: Like home page posts [WIP]
+6: TESTS
 
 q: Quit    
 ______________________________
@@ -810,6 +829,7 @@ ______________________________
         time.sleep(1)
         ig_bot = InstagramBot(un, pw)
         ig_bot.like_home_feed(numposts)
+
 
     elif (choice == "q" or choice == "Q"):
         print("Closing...")
