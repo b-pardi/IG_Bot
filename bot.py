@@ -37,21 +37,18 @@ class InstagramBot:
         time.sleep(random.normalvariate(1.1, 0.2))
         password_entry.submit()
         print("Logged in succesfully to account: " + self.username)
-        #self.driver.find_element_by_xpath("//div[contains(text(), 'Log In')]")[0].click()
         
         self.make_driver_wait("//button[contains(text(), 'Not Now')]")
-        #/html/body/div[4]/div/div/div/div[3]/button[2]
-        #//button[contains(text(), 'Not Now')]
         login_save_button = self.driver.find_elements_by_xpath("//button[contains(text(), 'Not Now')]")[0]
         login_save_button.click() 
         print("Closed popup 1")
-        time.sleep(random.normalvariate(2.5, 0.2))
-        """
+        time.sleep(random.normalvariate(4.5, 0.2))
+        
         self.make_driver_wait("//button[contains(text(), 'Not Now')]")
         notifications_button = self.driver.find_elements_by_xpath("//button[contains(text(), 'Not Now')]")[0]
         notifications_button.click() 
         print("Closed popup 2")
-        """
+        
         time.sleep(random.normalvariate(1.5, 0.2))
         
     
@@ -487,9 +484,9 @@ class InstagramBot:
         loops through list going to each users account and hitting unfollow while checking if account has been unfollowed
         refreshes page to confirm unfollow, will do this up to 5 times
         plays party horn when complete
-    Args: (none)
+    Args:
+        self
     Needs:
-        remove entry after unfollow confirmed
         Error checking for when instagram stops loading profiles
         Error checking for if line is empty
     """
@@ -581,9 +578,14 @@ class InstagramBot:
         Navigates to user profile and opens their follower box
         iterates through loops following users and scrolling to repopulate list every 12 accounts using follower amt as loop conditional
     Args:
+        self
         str user: target user account with followers that are those who user wants follow backs from
+        int wait_time: time to wait between each follow button
+        bool recent_follow: true if user has followed the target account recently
+        int num_users: number of users to scroll past if previous arg is true
     Needs:
         LIKE POSTS OF USERS AFTER FOLLOWING
+        put in num followers of target account into for loop
         WebDriverWaits
         Error checking for when Instagram cuts user off from following further (quit upon seeing message)
         Possibly needs more potential xpaths for follow buttons (see button 1 and 2)
@@ -766,24 +768,43 @@ class InstagramBot:
             except StaleElementReferenceException:
                 continue
             
-
             print("executed loop scroll: " + str(olc) + " times")
     
-
+    
+    """
+    W.I.P.  
+    Task:
+        Navigates to user recent posts
+        opens list of those who liked post
+        loops through adding each name to 'whitelist.txt'
+    Args:
+        self
+    Problems:
+        doesn't fuckin work
+    Solutions:
+        reevaluate life choices
+    Needs:
+        Problems fixed
+        check likes on more than one recent post
+        find users who viewed recent story
+    """
     def find_active_users(self):
         self.nav_user(un)
+        like_button = "/html/body/div[5]/div[2]/div/article/div[3]/section[2]/div/div[2]/a"
+        likes_scroll_box = "/html/body/div[6]/div/div/div[2]/div"
         for i in range(1,10):
             time.sleep(random.normalvariate(8,0.5))
             #xpath for a post in the profile
-            self.make_driver_wait(f"/html/body/div[3]/section/main/div/div[3]/article/div[1]/div/div[2]/div[{i}]/a/div[1]/div[2]")
-            post = self.driver.find_element_by_xpath(f"/html/body/div[3]/section/main/div/div[3]/article/div[1]/div/div[2]/div[{i}]/a/div[1]/div[2]")
+            self.make_driver_wait(f"/html/body/div[1]/section/main/div/div[4]/article/div[1]/div/div[1]/div[{i}]/a/div[1]/div[2]")
+            post = self.driver.find_element_by_xpath(f"/html/body/div[1]/section/main/div/div[4]/article/div[1]/div/div[1]/div[{i}]/a/div[1]/div[2]")
             post.click()
-            #xpath for liked button
-            self.make_driver_wait("/html/body/div[6]/div[2]/div/article/div[3]/section[2]/div/div[2]/a")
-            liked = self.driver.find_element_by_xpath("/html/body/div[6]/div[2]/div/article/div[3]/section[2]/div/div[2]/a")
+            time.sleep(3)
+
+            self.make_driver_wait(like_button)
+            liked = self.driver.find_element_by_xpath(like_button)
             liked.click()
-            self.make_driver_wait("/html/body/div[7]/div/div/div[2]/div")
-            scroll_box = self.driver.find_element_by_xpath("/html/body/div[7]/div/div/div[2]/div")
+            self.make_driver_wait(likes_scroll_box)
+            scroll_box = self.driver.find_element_by_xpath(likes_scroll_box)
             names = []
             links = []
             while(1):
@@ -791,7 +812,18 @@ class InstagramBot:
                 links = scroll_box.find_element_by_tag_name('a')
                 names = [name.text for name in links if name.text !='']
 
-            
+    """
+    Task:
+        Similar to mass_unfollow()
+        Navigates to user's profile, and then their following list
+        Unfollows every user in list that is NOT in 'whitelist.txt' upto limit specified
+        Each user unfollowed written to "unfollow.txt"
+    Args:
+        int num: number of users to unfollow
+    Needs:
+        Error checking for when Instagram cuts user off from unfollowing further (quit upon seeing message)
+        actually implement whitelist
+    """  
     def purge_following(self, num):
         self.nav_user(un)
         self.make_driver_wait("//a[contains(@href, '/following')]")
@@ -800,9 +832,9 @@ class InstagramBot:
         scroll_box = self.driver.find_element_by_xpath(self.scroll_box)
         i = 1
         last_div = 3
-
+        log = open("unfollow_log.txt", "w")
         while (i <= num):
-            time.sleep(2)
+            time.sleep(10)
             try:
                 self.make_driver_wait(f"//button[contains(text(), 'Following')]")  
                 unfollow_button = self.driver.find_element_by_xpath(f"//button[contains(text(), 'Following')]")
@@ -812,6 +844,7 @@ class InstagramBot:
                 confirm_button = self.driver.find_element_by_xpath("//button[contains(text(), 'Unfollow')]")
                 confirm_button.click()
                 print(f"Confirmed\n\t{i} users unfollowed")
+                self.make_driver_wait('a', "tag_name")
                 i +=1
                 time.sleep(1)
             except NoSuchElementException as confexc:
@@ -825,6 +858,11 @@ class InstagramBot:
                 confirm_button2.click()
                 print(f"2nd attempt Confirmed\n\t{i} users unfollowed")
 
+        links = scroll_box.find_elements_by_tag_name('a')
+        names = [name.text for name in links if name.text !='']
+        log.write(names)
+        log.write(f"Unfollowed {num} users")
+        log.close()
         print(f"Successfully unfollowed {num} users!")
                 
 
@@ -843,9 +881,10 @@ if __name__ == '__main__':
 4: Unfollow users
 5: Like home page posts [WIP]
 6: Unfollow users
-7: Create whitelist
+7: Create whitelist [WIP]
 8: TESTS
 
+h: Help
 q: Quit    
 ______________________________
 
@@ -909,6 +948,11 @@ ______________________________
         time.sleep(0.5)
         ig_bot = InstagramBot(un, pw)
         ig_bot.find_active_users()
+        
+    elif (choice == "h" or choice == "H"):
+        print("Help will be implemented in the future")
+        time.sleep(1)
+        sys.exit()
 
     elif (choice == "q" or choice == "Q"):
         print("Closing...")
