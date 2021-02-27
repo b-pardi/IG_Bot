@@ -821,6 +821,7 @@ class InstagramBot:
     Args:
         int num: number of users to unfollow
     Needs:
+        write names of unfollowed to list
         Error checking for when Instagram cuts user off from unfollowing further (quit upon seeing message)
         actually implement whitelist
     """  
@@ -857,6 +858,10 @@ class InstagramBot:
                 confirm_button2 = self.driver.find_element_by_xpath("//button[contains(text(), 'Unfollow')]")
                 confirm_button2.click()
                 print(f"2nd attempt Confirmed\n\t{i} users unfollowed")
+            except TimeoutException as timexc:
+                print(timexc)
+                self.driver.execute_script('arguments[0].scrollTop = arguments[0].scrollHeight', scroll_box)
+
 
         links = scroll_box.find_elements_by_tag_name('a')
         names = [name.text for name in links if name.text !='']
