@@ -11,6 +11,7 @@ class InstagramBot:
         self.password = password
         self.base_url = 'https://www.instagram.com'
         self.tag_url = 'explore/tags'
+        self.scroll_box = "/html/body/div[5]/div/div/div[2]"
         
         #pass exe to an instance of chrome from selenium's webdriver
         self.driver = webdriver.Chrome()
@@ -38,15 +39,19 @@ class InstagramBot:
         print("Logged in succesfully to account: " + self.username)
         #self.driver.find_element_by_xpath("//div[contains(text(), 'Log In')]")[0].click()
         
-        self.make_driver_wait("/html/body/div[1]/section/main/div/div/div/div/button")
+        self.make_driver_wait("//button[contains(text(), 'Not Now')]")
+        #/html/body/div[4]/div/div/div/div[3]/button[2]
+        #//button[contains(text(), 'Not Now')]
         login_save_button = self.driver.find_elements_by_xpath("//button[contains(text(), 'Not Now')]")[0]
         login_save_button.click() 
         print("Closed popup 1")
         time.sleep(random.normalvariate(2.5, 0.2))
+        """
         self.make_driver_wait("//button[contains(text(), 'Not Now')]")
         notifications_button = self.driver.find_elements_by_xpath("//button[contains(text(), 'Not Now')]")[0]
         notifications_button.click() 
         print("Closed popup 2")
+        """
         time.sleep(random.normalvariate(1.5, 0.2))
         
     
@@ -82,7 +87,7 @@ class InstagramBot:
         return b''.join(re.split(br"[^0-9]*", raw_string))
 
     def make_driver_wait(self, element_to_locate, by='xpath'):
-        wait = WebDriverWait(self.driver, 8)
+        wait = WebDriverWait(self.driver, 15)
         if by == 'xpath':
             wait.until(EC.element_to_be_clickable((By.XPATH, element_to_locate)))
         elif by == 'class_name':
@@ -94,8 +99,8 @@ class InstagramBot:
 
 
     def get_names(self, lc):
-        self.make_driver_wait("/html/body/div[5]/div/div/div[2]")
-        scroll_box = self.driver.find_element_by_xpath("/html/body/div[5]/div/div/div[2]")
+        self.make_driver_wait(self.scroll_box)
+        scroll_box = self.driver.find_element_by_xpath(self.scroll_box)
         names = []
         links = []
         iteration = []
@@ -198,7 +203,7 @@ class InstagramBot:
     def auto_scroll(self, num_users):
         scrolls = int(num_users) / 12
         num_scrolls = int(scrolls)
-        scroll_box = self.driver.find_element_by_xpath("/html/body/div[5]/div/div/div[2]")
+        scroll_box = self.driver.find_element_by_xpath(self.scroll_box)
         for i in range(num_scrolls):
             time.sleep(2.5)
             self.driver.execute_script('arguments[0].scrollTop = arguments[0].scrollHeight', scroll_box)
@@ -594,7 +599,7 @@ class InstagramBot:
         followers_button = self.driver.find_element_by_xpath("//a[contains(@href, '/{}/followers')]".format(user))
         followers_button.click()
         time.sleep(5)
-        followers_popup = self.driver.find_element_by_xpath("/html/body/div[5]/div/div/div[2]")
+        followers_popup = self.driver.find_element_by_xpath(self.scroll_box)
         print("Follower box opened")
         if (recent_follow == 'y' or 'Y'):
             self.auto_scroll(num_users)
@@ -765,6 +770,65 @@ class InstagramBot:
             print("executed loop scroll: " + str(olc) + " times")
     
 
+    def find_active_users(self):
+        self.nav_user(un)
+        for i in range(1,10):
+            time.sleep(random.normalvariate(8,0.5))
+            #xpath for a post in the profile
+            self.make_driver_wait(f"/html/body/div[3]/section/main/div/div[3]/article/div[1]/div/div[2]/div[{i}]/a/div[1]/div[2]")
+            post = self.driver.find_element_by_xpath(f"/html/body/div[3]/section/main/div/div[3]/article/div[1]/div/div[2]/div[{i}]/a/div[1]/div[2]")
+            post.click()
+            #xpath for liked button
+            self.make_driver_wait("/html/body/div[6]/div[2]/div/article/div[3]/section[2]/div/div[2]/a")
+            liked = self.driver.find_element_by_xpath("/html/body/div[6]/div[2]/div/article/div[3]/section[2]/div/div[2]/a")
+            liked.click()
+            self.make_driver_wait("/html/body/div[7]/div/div/div[2]/div")
+            scroll_box = self.driver.find_element_by_xpath("/html/body/div[7]/div/div/div[2]/div")
+            names = []
+            links = []
+            while(1):
+                self.make_driver_wait('a', "tag_name")
+                links = scroll_box.find_element_by_tag_name('a')
+                names = [name.text for name in links if name.text !='']
+
+            
+    def purge_following(self, num):
+        self.nav_user(un)
+        self.make_driver_wait("//a[contains(@href, '/following')]")
+        self.driver.find_element_by_xpath("//a[contains(@href, '/following')]").click()
+        self.make_driver_wait(self.scroll_box)
+        scroll_box = self.driver.find_element_by_xpath(self.scroll_box)
+        i = 1
+        last_div = 3
+
+        while (i <= num):
+            time.sleep(2)
+            try:
+                self.make_driver_wait(f"//button[contains(text(), 'Following')]")  
+                unfollow_button = self.driver.find_element_by_xpath(f"//button[contains(text(), 'Following')]")
+                unfollow_button.click()                             #/html/body/div[5]/div/div/div[2]/ul/div/li[1]/div/div[3]/button
+                print("Unfollow Clicked")
+                time.sleep(1)
+                confirm_button = self.driver.find_element_by_xpath("//button[contains(text(), 'Unfollow')]")
+                confirm_button.click()
+                print(f"Confirmed\n\t{i} users unfollowed")
+                i +=1
+                time.sleep(1)
+            except NoSuchElementException as confexc:
+                print(confexc)
+                time.sleep(3)
+                unfollow_button = self.driver.find_element_by_xpath(f"//button[contains(text(), 'Following')]")
+                unfollow_button.click()
+                print("Unfollow RE-clicked")
+                time.sleep(1)
+                confirm_button2 = self.driver.find_element_by_xpath("//button[contains(text(), 'Unfollow')]")
+                confirm_button2.click()
+                print(f"2nd attempt Confirmed\n\t{i} users unfollowed")
+
+        print(f"Successfully unfollowed {num} users!")
+                
+
+
 
 #code under here will execute if the name called is main
 if __name__ == '__main__':
@@ -778,7 +842,9 @@ if __name__ == '__main__':
 3: Find Unfollowers
 4: Unfollow users
 5: Like home page posts [WIP]
-6: TESTS
+6: Unfollow users
+7: Create whitelist
+8: TESTS
 
 q: Quit    
 ______________________________
@@ -830,6 +896,19 @@ ______________________________
         ig_bot = InstagramBot(un, pw)
         ig_bot.like_home_feed(numposts)
 
+    elif(choice == "6"):
+        num = int(input("How many users to unfollow? "))
+        time.sleep(0.1)
+        print("Unfollowing users with exception of those in 'whitelist.txt'")
+        time.sleep(1)
+        ig_bot = InstagramBot(un, pw)
+        ig_bot.purge_following(num)
+
+    elif(choice == "7"):
+        print("Navigating to profile to find active users...")
+        time.sleep(0.5)
+        ig_bot = InstagramBot(un, pw)
+        ig_bot.find_active_users()
 
     elif (choice == "q" or choice == "Q"):
         print("Closing...")
