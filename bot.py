@@ -208,6 +208,19 @@ class InstagramBot:
         print(f"Scrolled {scrolls} times past {num_users}.\nAll caught up!")
 
 
+    def remove_duplicates(self, file_name):
+        name_list = []
+        with open(file_name, 'r') as names:
+            for name in names:
+                if (name not in name_list) and (name != '\n'):
+                    name_list.append(name.strip('\n'))
+                    print(name)
+
+        with open (file_name, 'w') as new_names:
+            for name in name_list:
+                new_names.write(f"{name}\n")
+                #print(new_names)
+
 
     #
     #END HELPER FUNCTIONS
@@ -780,24 +793,29 @@ class InstagramBot:
     Args:
         self
     Problems:
-        doesn't fuckin work
+        duplicate names, and duplicate removal fails
     Solutions:
         reevaluate life choices
     Needs:
         Problems fixed
-        check likes on more than one recent post
         find users who viewed recent story
     """
     def find_active_users(self):
         self.nav_user(un)
         like_button = "/html/body/div[5]/div[2]/div/article/div[3]/section[2]/div/div[2]/a"
         likes_scroll_box = "/html/body/div[6]/div/div/div[2]/div"
+        top_button_xpath = "/html/body/div[6]/div/div/div[2]/div/div/div[1]/div[3]/button"
+        
         for i in range(1,10):
             time.sleep(random.normalvariate(8,0.5))
             #xpath for a post in the profile
+            """
             self.make_driver_wait(f"/html/body/div[1]/section/main/div/div[4]/article/div[1]/div/div[1]/div[{i}]/a/div[1]/div[2]")
             post = self.driver.find_element_by_xpath(f"/html/body/div[1]/section/main/div/div[4]/article/div[1]/div/div[1]/div[{i}]/a/div[1]/div[2]")
             post.click()
+            """
+            posts = self.driver.find_elements_by_class_name("_9AhH0")
+            posts[i-1].click()
             time.sleep(3)
 
             self.make_driver_wait(like_button)
@@ -805,12 +823,149 @@ class InstagramBot:
             liked.click()
             self.make_driver_wait(likes_scroll_box)
             scroll_box = self.driver.find_element_by_xpath(likes_scroll_box)
+            
             names = []
             links = []
-            while(1):
-                self.make_driver_wait('a', "tag_name")
-                links = scroll_box.find_element_by_tag_name('a')
-                names = [name.text for name in links if name.text !='']
+
+            links = scroll_box.find_elements_by_tag_name('a')
+            print(f"Gathered top of list {len(links)} links, and they are {links}")
+            for name in links:
+                if (name.text != '') and (name.text not in links):
+                    names.append(name.text)
+                    print("Appended first iteration links")
+
+            box_len = self.driver.execute_script("arguments[0].scrollTo(0, arguments[0].scrollHeight); return arguments[0].scrollHeight;", scroll_box)
+            print("Scrolled first")
+            end = False
+            while (end == False):
+                page_ht = box_len
+                time.sleep(2)
+
+                links = scroll_box.find_elements_by_tag_name('a')
+                print(f"Gathered {len(links)} and they are {links}")
+                for name in links:
+                    if (name.text != '') and (name.text not in links):
+                        names.append(name.text)
+                        print("Appended those links")
+
+                box_len = self.driver.execute_script("arguments[0].scrollTo(0, arguments[0].scrollHeight); return arguments[0].scrollHeight;", scroll_box)
+                print("loop scroll")
+                if (page_ht == box_len):
+                    end = True
+
+            #self.driver.execute_script("return arguments[0].scrollIntoView(true);", top_button)
+
+            print(len(links))
+            
+
+            with open("whitelist.txt", "a") as wl:
+                for name in names:
+                    wl.write(f"{name}\n")
+
+            print(f"Links gathered from from {i} recent post")
+            self.nav_user(un)
+
+        self.remove_duplicates("whitelist.txt")
+        print("Active users found and added to whitelist.txt")
+
+    """
+    W.I.P.  
+    Task:
+        gathers small group of users from following
+    Args:
+        self
+    Problems:
+        not tested
+    Solutions:
+        test it maybe
+    Needs:
+
+        testing
+    """
+    def gather_unfollow_names(self):
+        first_user_links = scroll_box.find_elements_by_tag_name('a')
+        print(f"{len(first_user_links)} links grabbed")
+        time.sleep(1)
+
+        unf_targets = []
+        for name in first_user_links:
+            if(name.text != '') and (name.text not in wl_names):
+                unf_targets.append(name.text)
+                print(f"Appended {name.text}")
+        
+        print("User list created")
+        time.sleep(1)
+
+        return unf_targets
+    """        
+    W.I.P.  
+    Task:
+        Unfollows users not in whitelist.txt or permawhitelist.txt
+        navs to user's following and gets small group of names at a time
+    Args:
+        self
+    Problems:
+        goes to same profiles repeatedly
+    Solutions:
+        use the refresh check method from mass_unfollow()
+    Needs:
+        expand the group of names for when users in whitelist crowd the top
+    """
+    def ultra_mass_unfollow(self, unf_num):
+        log = open("unfollow_log.txt", "w")
+        wl_names = []
+        with open("permawhitelist.txt", "r") as pwl:
+            for name in pwl:
+                wl_names.append(name.strip('\n'))
+        with open("whitelist.txt", "r") as wl:
+            for name in wl:
+                wl_names.append(name.strip('\n'))
+
+        for j in range(1, (int(unf_num/12))):
+            self.nav_user(un)
+            self.make_driver_wait("//a[contains(@href, '/following')]")
+            self.driver.find_element_by_xpath("//a[contains(@href, '/following')]").click()
+            self.make_driver_wait(self.scroll_box)
+            scroll_box = self.driver.find_element_by_xpath(self.scroll_box)
+            time.sleep(2)
+
+            first_user_links = scroll_box.find_elements_by_tag_name('a')
+            print(f"{len(first_user_links)} links grabbed")
+            time.sleep(1)
+
+            unf_targets = []
+            for name in first_user_links:
+                if(name.text != '') and (name.text not in wl_names):
+                    unf_targets.append(name.text)
+                    print(f"Appended {name.text}")
+            
+            print("User list created")
+            time.sleep(1)
+
+            if(len(unf_targets) <= 3):
+                print("list is too short, scrolling")
+                box_len = self.driver.execute_script("arguments[0].scrollTo(0, arguments[0].scrollHeight); return arguments[0].scrollHeight;", scroll_box)
+                first_user_links = scroll_box.find_elements_by_tag_name('a')
+                print(f"{len(first_user_links)} links grabbed again")
+                time.sleep(1)
+                for name in first_user_links:
+                    if(name.text != '') and (name.text not in wl_names):
+                        unf_targets.append(name.text)
+                        print(f"Appended {name.text}")
+
+            for i in range(0, len(unf_targets)):
+                print(f"navigating to user {i}: {unf_targets[i]}")
+                self.nav_user(unf_targets[i])
+                time.sleep(3)
+                buttons = self.driver.find_elements_by_xpath("//button[*]")[0].click()
+                time.sleep(random.normalvariate(1.8, 0.05))
+                self.driver.find_element_by_xpath("//button[contains(text(), 'Unfollow')]").click()
+                time.sleep(random.normalvariate(10, 0.5))
+        
+
+        log.close()
+
+
 
     """
     Task:
@@ -832,8 +987,10 @@ class InstagramBot:
         self.make_driver_wait(self.scroll_box)
         scroll_box = self.driver.find_element_by_xpath(self.scroll_box)
         i = 1
-        last_div = 3
+        wl_names = []
+
         log = open("unfollow_log.txt", "w")
+
         while (i <= num):
             time.sleep(10)
             try:
@@ -865,15 +1022,14 @@ class InstagramBot:
 
         links = scroll_box.find_elements_by_tag_name('a')
         names = [name.text for name in links if name.text !='']
-        log.write(names)
+        for user in names:
+            log.write(user)
         log.write(f"Unfollowed {num} users")
         log.close()
         print(f"Successfully unfollowed {num} users!")
                 
 
 
-
-#code under here will execute if the name called is main
 if __name__ == '__main__':
 
     print("***Menu***")
@@ -885,10 +1041,11 @@ if __name__ == '__main__':
 3: Find Unfollowers
 4: Unfollow users
 5: Like home page posts [WIP]
-6: Unfollow users
+6: Purge Following
 7: Create whitelist [WIP]
-8: TESTS
+8: Unfollow using whitelist
 
+test: TESTS
 h: Help
 q: Quit    
 ______________________________
@@ -943,7 +1100,7 @@ ______________________________
     elif(choice == "6"):
         num = int(input("How many users to unfollow? "))
         time.sleep(0.1)
-        print("Unfollowing users with exception of those in 'whitelist.txt'")
+        print("Unfollowing users...")
         time.sleep(1)
         ig_bot = InstagramBot(un, pw)
         ig_bot.purge_following(num)
@@ -953,6 +1110,20 @@ ______________________________
         time.sleep(0.5)
         ig_bot = InstagramBot(un, pw)
         ig_bot.find_active_users()
+
+    elif(choice == "8"):
+        num = int(input("How many users to unfollow? "))
+        time.sleep(0.1)
+        print("Unfollowing users with exception of those in 'whitelist.txt'")
+        time.sleep(0.5)
+        ig_bot = InstagramBot(un, pw)
+        ig_bot.ultra_mass_unfollow(num)
+
+    elif(choice == "test"):
+        print("executing current test function")
+        time.sleep(0.5)
+        ig_bot = InstagramBot(un, pw)
+        ig_bot.remove_duplicates("whitelist.txt")
         
     elif (choice == "h" or choice == "H"):
         print("Help will be implemented in the future")
