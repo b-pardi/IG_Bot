@@ -210,16 +210,33 @@ class InstagramBot:
 
     def remove_duplicates(self, file_name):
         name_list = []
+        special_names_list = []
+        names_dict = {}
+        file_name = "whitelist.txt"
+        excl_file_name = "permawhitelist.txt"
         with open(file_name, 'r') as names:
-            for name in names:
-                if (name not in name_list) and (name != '\n'):
-                    name_list.append(name.strip('\n'))
-                    print(name)
+            for line in names:
+                if (line in names_dict):
+                    names_dict[line] = names_dict[line] + 1
+                else:
+                    names_dict[line] = 1
+
+                if (line not in name_list):
+                    name_list.append(line)
+                    
+        with open(excl_file_name, 'a+') as special_names:
+            special_names.seek(0)
+            for line in special_names:
+                special_names_list.append(line)
+                print(line)
+            print(special_names_list)
+            for item in list(names_dict.keys()):
+                if ((names_dict[item] > 6) and (item not in special_names_list)):
+                    special_names.write(item)
 
         with open (file_name, 'w') as new_names:
-            for name in name_list:
-                new_names.write(f"{name}\n")
-                #print(new_names)
+            for item in name_list:
+                new_names.write(item)
 
 
     #
@@ -942,7 +959,7 @@ class InstagramBot:
             print("User list created")
             time.sleep(1)
 
-            if(len(unf_targets) <= 3):
+            if(len(unf_targets) <= 5):
                 print("list is too short, scrolling")
                 box_len = self.driver.execute_script("arguments[0].scrollTo(0, arguments[0].scrollHeight); return arguments[0].scrollHeight;", scroll_box)
                 first_user_links = scroll_box.find_elements_by_tag_name('a')
